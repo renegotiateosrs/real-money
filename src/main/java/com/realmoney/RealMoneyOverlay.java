@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -13,15 +13,15 @@ import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import net.runelite.client.util.ColorUtil;
 
-class GoldToCurrencyOverlay extends Overlay
+class RealMoneyOverlay extends Overlay
 {
 	private final Client client;
-	private final GoldToCurrencyPlugin plugin;
-	private final GoldToCurrencyConfig config;
+	private final RealMoneyPlugin plugin;
+	private final RealMoneyConfig config;
 	private final TooltipManager tooltipManager;
 
 	@Inject
-	GoldToCurrencyOverlay(Client client, GoldToCurrencyPlugin plugin, GoldToCurrencyConfig config, TooltipManager tooltipManager)
+	RealMoneyOverlay(Client client, RealMoneyPlugin plugin, RealMoneyConfig config, TooltipManager tooltipManager)
 	{
 		this.client = client;
 		this.plugin = plugin;

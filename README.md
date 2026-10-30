@@ -1,4 +1,4 @@
-# Gold to Currency
+# Real Money
 
 A RuneLite plugin that shows Old School RuneScape gold, and the Grand Exchange value of items, in USD or another real-world currency.
 

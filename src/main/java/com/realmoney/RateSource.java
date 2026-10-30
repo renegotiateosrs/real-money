@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 public enum RateSource
 {

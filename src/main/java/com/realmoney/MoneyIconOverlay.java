@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,11 +20,11 @@ class MoneyIconOverlay extends Overlay
 	private static final Color YELLOW = new Color(255, 255, 0);
 	private static final Color GREEN = new Color(0, 255, 128);
 
-	private final GoldToCurrencyPlugin plugin;
-	private final GoldToCurrencyConfig config;
+	private final RealMoneyPlugin plugin;
+	private final RealMoneyConfig config;
 
 	@Inject
-	MoneyIconOverlay(GoldToCurrencyPlugin plugin, GoldToCurrencyConfig config)
+	MoneyIconOverlay(RealMoneyPlugin plugin, RealMoneyConfig config)
 	{
 		this.plugin = plugin;
 		this.config = config;
@@ -42,7 +42,7 @@ class MoneyIconOverlay extends Overlay
 
 		Shape oldClip = graphics.getClip();
 		graphics.setFont(FontManager.getRunescapeSmallFont());
-		for (GoldToCurrencyPlugin.CoinSlot slot : plugin.getCoinSlots())
+		for (RealMoneyPlugin.CoinSlot slot : plugin.getCoinSlots())
 		{
 			Rectangle b = slot.bounds;
 			graphics.setClip(slot.clip);

@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import java.util.Currency;
 

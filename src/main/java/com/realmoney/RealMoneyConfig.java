@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import java.awt.Color;
 import net.runelite.client.config.Config;
@@ -6,10 +6,10 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
-@ConfigGroup(GoldToCurrencyConfig.GROUP)
-public interface GoldToCurrencyConfig extends Config
+@ConfigGroup(RealMoneyConfig.GROUP)
+public interface RealMoneyConfig extends Config
 {
-	String GROUP = "goldtocurrency";
+	String GROUP = "realmoney";
 
 	@ConfigSection(
 		name = "Exchange rate",

@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

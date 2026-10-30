@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import com.google.inject.Provides;
 import java.awt.Rectangle;
@@ -28,11 +28,11 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 
 @PluginDescriptor(
-	name = "Gold to Currency",
+	name = "Real Money",
 	description = "Shows gold and item values in USD or another real-world currency, priced by the Old School Bond",
 	tags = {"gp", "gold", "coins", "usd", "dollar", "currency", "money", "bond", "price", "value"}
 )
-public class GoldToCurrencyPlugin extends Plugin
+public class RealMoneyPlugin extends Plugin
 {
 	static final int COINS = 995;
 	static final int COINS_ALT = 617;
@@ -47,7 +47,7 @@ public class GoldToCurrencyPlugin extends Plugin
 	private ClientThread clientThread;
 
 	@Inject
-	private GoldToCurrencyConfig config;
+	private RealMoneyConfig config;
 
 	@Inject
 	private ItemManager itemManager;
@@ -59,7 +59,7 @@ public class GoldToCurrencyPlugin extends Plugin
 	private InfoBoxManager infoBoxManager;
 
 	@Inject
-	private GoldToCurrencyOverlay overlay;
+	private RealMoneyOverlay overlay;
 
 	@Inject
 	private MoneyIconOverlay moneyIconOverlay;
@@ -93,9 +93,9 @@ public class GoldToCurrencyPlugin extends Plugin
 	}
 
 	@Provides
-	GoldToCurrencyConfig provideConfig(ConfigManager configManager)
+	RealMoneyConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(GoldToCurrencyConfig.class);
+		return configManager.getConfig(RealMoneyConfig.class);
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class GoldToCurrencyPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
-		if (GoldToCurrencyConfig.GROUP.equals(event.getGroup()))
+		if (RealMoneyConfig.GROUP.equals(event.getGroup()))
 		{
 			// Recreate the infobox so its icon follows the currency
 			removeInfoBox();

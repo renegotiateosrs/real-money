@@ -1,4 +1,4 @@
-package com.goldtocurrency;
+package com.realmoney;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -7,9 +7,9 @@ import net.runelite.client.util.QuantityFormatter;
 
 class CoinsInfoBox extends InfoBox
 {
-	private final GoldToCurrencyPlugin plugin;
+	private final RealMoneyPlugin plugin;
 
-	CoinsInfoBox(BufferedImage image, GoldToCurrencyPlugin plugin)
+	CoinsInfoBox(BufferedImage image, RealMoneyPlugin plugin)
 	{
 		super(image, plugin);
 		this.plugin = plugin;
