@@ -75,6 +75,30 @@ public interface GoldToCurrencyConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "replaceCoinIcons",
+		name = "Replace coin icons",
+		description = "Draw bills, bundles and money bags in place of coin piles. Bigger stacks get bigger piles of money.",
+		section = displaySection,
+		position = -2
+	)
+	default boolean replaceCoinIcons()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "stackLabel",
+		name = "Stack label",
+		description = "Text drawn on replaced coin icons",
+		section = displaySection,
+		position = -1
+	)
+	default StackLabel stackLabel()
+	{
+		return StackLabel.GOLD;
+	}
+
+	@ConfigItem(
 		keyName = "showTooltip",
 		name = "Show tooltip",
 		description = "Show the converted value when hovering items",

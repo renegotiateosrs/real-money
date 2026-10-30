@@ -1,12 +1,22 @@
 package com.goldtocurrency;
 
 import com.google.inject.Provides;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.events.BeforeRender;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -51,10 +61,36 @@ public class GoldToCurrencyPlugin extends Plugin
 	@Inject
 	private GoldToCurrencyOverlay overlay;
 
+	@Inject
+	private MoneyIconOverlay moneyIconOverlay;
+
 	@Getter
 	private long inventoryGp;
 
 	private CoinsInfoBox infoBox;
+
+	@Getter
+	private List<CoinSlot> coinSlots = Collections.emptyList();
+
+	// Coin widgets whose sprites are currently made invisible
+	private Set<Widget> hiddenWidgets = Collections.newSetFromMap(new IdentityHashMap<>());
+
+	private BufferedImage[] moneyIcons;
+	private CurrencyType moneyIconCurrency;
+
+	static final class CoinSlot
+	{
+		final Rectangle bounds;
+		final Rectangle clip;
+		final int quantity;
+
+		CoinSlot(Rectangle bounds, Rectangle clip, int quantity)
+		{
+			this.bounds = bounds;
+			this.clip = clip;
+			this.quantity = quantity;
+		}
+	}
 
 	@Provides
 	GoldToCurrencyConfig provideConfig(ConfigManager configManager)
@@ -66,6 +102,7 @@ public class GoldToCurrencyPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		overlayManager.add(moneyIconOverlay);
 		clientThread.invokeLater(() -> updateInventory(client.getItemContainer(INVENTORY_CONTAINER)));
 	}
 
@@ -73,6 +110,9 @@ public class GoldToCurrencyPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		overlayManager.remove(moneyIconOverlay);
+		clientThread.invoke(() -> restoreCoinSprites(Collections.emptySet()));
+		coinSlots = Collections.emptyList();
 		removeInfoBox();
 		inventoryGp = 0;
 	}
@@ -91,6 +131,8 @@ public class GoldToCurrencyPlugin extends Plugin
 	{
 		if (GoldToCurrencyConfig.GROUP.equals(event.getGroup()))
 		{
+			// Recreate the infobox so its icon follows the currency
+			removeInfoBox();
 			clientThread.invokeLater(() -> updateInventory(client.getItemContainer(INVENTORY_CONTAINER)));
 		}
 	}
@@ -114,7 +156,7 @@ public class GoldToCurrencyPlugin extends Plugin
 		{
 			if (infoBox == null)
 			{
-				infoBox = new CoinsInfoBox(itemManager.getImage(COINS, 10_000, true), this);
+				infoBox = new CoinsInfoBox(config.replaceCoinIcons() ? getMoneyIcon(10_000) : itemManager.getImage(COINS, 10_000, true), this);
 				infoBoxManager.addInfoBox(infoBox);
 			}
 		}
@@ -122,6 +164,110 @@ public class GoldToCurrencyPlugin extends Plugin
 		{
 			removeInfoBox();
 		}
+	}
+
+	@Subscribe
+	public void onBeforeRender(BeforeRender event)
+	{
+		if (!config.replaceCoinIcons())
+		{
+			if (!hiddenWidgets.isEmpty())
+			{
+				restoreCoinSprites(Collections.emptySet());
+				coinSlots = Collections.emptyList();
+			}
+			return;
+		}
+
+		List<CoinSlot> slots = new ArrayList<>();
+		Set<Widget> hidden = Collections.newSetFromMap(new IdentityHashMap<>());
+		Rectangle canvas = new Rectangle(0, 0, client.getCanvasWidth(), client.getCanvasHeight());
+		findCoins(client.getWidgetRoots(), canvas, slots, hidden);
+
+		restoreCoinSprites(hidden);
+		hiddenWidgets = hidden;
+		coinSlots = slots;
+	}
+
+	/**
+	 * Walks the visible widget tree for coin stacks, hiding their sprites and recording where to draw money instead.
+	 */
+	private void findCoins(Widget[] widgets, Rectangle clip, List<CoinSlot> slots, Set<Widget> hidden)
+	{
+		if (widgets == null)
+		{
+			return;
+		}
+
+		for (Widget w : widgets)
+		{
+			if (w == null || w.isSelfHidden())
+			{
+				continue;
+			}
+
+			int itemId = w.getItemId();
+			if ((itemId == COINS || itemId == COINS_ALT) && w.getItemQuantity() > 0)
+			{
+				// Leave a stack being dragged alone so it follows the mouse as normal
+				if (client.isDraggingWidget() && client.getDraggedWidget() == w)
+				{
+					continue;
+				}
+
+				Rectangle bounds = w.getBounds();
+				Rectangle visible = clip.intersection(bounds);
+				if (!visible.isEmpty())
+				{
+					w.setOpacity(255);
+					hidden.add(w);
+					slots.add(new CoinSlot(bounds, visible, w.getItemQuantity()));
+				}
+				continue;
+			}
+
+			Rectangle childClip = w.getType() == WidgetType.LAYER ? clip.intersection(w.getBounds()) : clip;
+			if (childClip.isEmpty())
+			{
+				continue;
+			}
+			findCoins(w.getDynamicChildren(), childClip, slots, hidden);
+			findCoins(w.getStaticChildren(), childClip, slots, hidden);
+			findCoins(w.getNestedChildren(), childClip, slots, hidden);
+		}
+	}
+
+	/**
+	 * Makes previously hidden coin sprites visible again, except those still in {@code keep}.
+	 */
+	private void restoreCoinSprites(Set<Widget> keep)
+	{
+		for (Widget w : hiddenWidgets)
+		{
+			if (!keep.contains(w))
+			{
+				w.setOpacity(0);
+			}
+		}
+		if (keep.isEmpty())
+		{
+			hiddenWidgets = Collections.newSetFromMap(new IdentityHashMap<>());
+		}
+	}
+
+	BufferedImage getMoneyIcon(long quantity)
+	{
+		CurrencyType currency = config.currency();
+		if (moneyIcons == null || moneyIconCurrency != currency)
+		{
+			moneyIcons = new BufferedImage[MoneyIcons.tierCount()];
+			for (int i = 0; i < moneyIcons.length; i++)
+			{
+				moneyIcons[i] = MoneyIcons.create(i, currency.getIconSymbol());
+			}
+			moneyIconCurrency = currency;
+		}
+		return moneyIcons[MoneyIcons.tierFor(quantity)];
 	}
 
 	private void removeInfoBox()
